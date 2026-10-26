@@ -1,0 +1,48 @@
+name: Build FAM HALO BUNDLES APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract project ZIP
+        run: |
+          mkdir project
+          unzip -q FAM_HALO_BUNDLES_ANDROID_BUILD.zip -d project
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install dependencies
+        working-directory: project
+        run: npm install
+
+      - name: Create Android project
+        working-directory: project
+        run: npx cap add android
+
+      - name: Build APK
+        working-directory: project/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: FAM-HALO-BUNDLES-APK
+          path: project/android/app/build/outputs/apk/debug/app-debug.apk
